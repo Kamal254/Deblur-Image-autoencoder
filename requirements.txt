@@ -26,4 +26,5 @@ tensorflow
 keras
 kfp
 kfp-kubernetes
+#pandas
 -e .
