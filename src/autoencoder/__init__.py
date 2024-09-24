@@ -8,7 +8,7 @@ import logging
 
 logging_str = "[%(asctime)s:%(levelname)s:%(module)s:%(message)s]"
 
-logging_directory = "../../../logs"
+logging_directory = "../../logs"
 log_filepath = os.path.join(logging_directory, "running_logs.log")
 os.makedirs(logging_directory, exist_ok=True)
 
@@ -22,4 +22,4 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger("regressionLogger")
+logger = logging.getLogger("autoencoderlogger")

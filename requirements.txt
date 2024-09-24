@@ -1,6 +1,8 @@
 pathlib
 logging
 mlflow
+cv2-tools
+scikit-image
 urllib3
 dataclasses
 gdown
