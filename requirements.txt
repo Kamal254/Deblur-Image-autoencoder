@@ -11,6 +11,7 @@ pyYAML
 tqdm
 ensure
 joblib
+json
 types-PyYAML
 scipy
 pandas== 2.2.2

@@ -1,24 +1,49 @@
 # This file containes the key:value pair of the paths of the folders and files.
 
 # Artifacts will be the root folder.
-root: ../../../artifacts
+# root: ../../../artifacts
+
+# data_paths:
+#   source_gdrive_url: https://drive.google.com/drive/folders/134OqBWRfWQUfh_xg2PCj0GuRzq7JwAzp?usp=sharing
+#   gdrive_api_key: AIzaSyDCdSTGDStVPzuhxlQzQlaQvoys67tlqXM
+#   data_directory: ../../../artifacts/dataset
+#   download_image_folder: ../../../artifacts/dataset/orignal_images
+#   processed_image_folder: ../../../artifacts/dataset/processed_images
+#   blur_image_folder: ../../../artifacts/dataset/blur_images
+#   test_images_path : ../../../artifacts/dataset/testingfolder
+#   test_blurimages_source : https://drive.google.com/drive/folders/1HHFORB79yvCz3Miy-fWPTVzC1avGGMxt?usp=sharing
+#   test_blur_images_path : ../../../artifacts/dataset/testingfolder/test_blur_images
+#   test_cleanimages_source : https://drive.google.com/drive/folders/1PDBJi8hLuaxDK3D3tsU-Uw5N0wySwP1X?usp=sharing
+#   test_clean_images_path : ../../../artifacts/dataset/testingfolder/test_clean_images
+
+
+# model_paths:
+#   model_dir: ../../../artifacts/models
+#   HDFmodel_path : ../../../artifacts/models/autoencoder.h5
+#   model_path: ../../../artifacts/models/model
+#   model_history_path : ../../../artifacts/models/history.json
+
+
+
+
+root: artifacts
 
 data_paths:
   source_gdrive_url: https://drive.google.com/drive/folders/134OqBWRfWQUfh_xg2PCj0GuRzq7JwAzp?usp=sharing
   gdrive_api_key: AIzaSyDCdSTGDStVPzuhxlQzQlaQvoys67tlqXM
-  data_directory: ../../../artifacts/dataset
-  download_image_folder: ../../../artifacts/dataset/orignal_images
-  processed_image_folder: ../../../artifacts/dataset/processed_images
-  blur_image_folder: ../../../artifacts/dataset/blur_images
-  test_images_path : ../../../artifacts/dataset/testingfolder
+  data_directory: artifacts/dataset
+  download_image_folder: artifacts/dataset/orignal_images
+  processed_image_folder: artifacts/dataset/processed_images
+  blur_image_folder: artifacts/dataset/blur_images
+  test_images_path : artifacts/dataset/testingfolder
   test_blurimages_source : https://drive.google.com/drive/folders/1HHFORB79yvCz3Miy-fWPTVzC1avGGMxt?usp=sharing
-  test_blur_images_path : ../../../artifacts/dataset/testingfolder/test_blur_images
+  test_blur_images_path : artifacts/dataset/testingfolder/test_blur_images
   test_cleanimages_source : https://drive.google.com/drive/folders/1PDBJi8hLuaxDK3D3tsU-Uw5N0wySwP1X?usp=sharing
-  test_clean_images_path : ../../../artifacts/dataset/testingfolder/test_clean_images
+  test_clean_images_path : artifacts/dataset/testingfolder/test_clean_images
 
 
 model_paths:
-  model_dir: ../../../artifacts/models
-  HDFmodel_path : ../../../artifacts/models/autoencoder.h5
-  model_path: ../../../artifacts/models/model
-  model_history_path : ../../../artifacts/models/history.json
+  model_dir: artifacts/models
+  HDFmodel_path : artifacts/models/autoencoder.h5
+  model_path: artifacts/models/model
+  model_history_path : artifacts/models/history.json
