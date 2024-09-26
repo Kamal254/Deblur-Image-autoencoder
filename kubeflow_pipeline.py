@@ -48,17 +48,21 @@ def model_deployment():
     deployer.main()
 
 
+@dsl.component(
+    base_image="python:3.9-slim"  # You can use a lightweight image since it's a utility task.
+)
+
 def delete_pvc_if_exist():
     import subprocess
     
     try:
-        result = subprocess.run(['kubectl', 'get', 'pvc', 'autoencoder-pvc'], 
+        result = subprocess.run(['kubectl', 'get', 'pvc', 'autoencoder-pvc', '-n', 'kubeflow'], 
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
         
         if result.returncode == 0:
             print("PVC 'autoencoder-pvc' already exists.")
             print("Deleting the existing PVC...")
-            subprocess.run(['kubectl', 'delete', 'pvc', 'autoencoder-pvc'], check=True)
+            subprocess.run(['kubectl', 'delete', 'pvc', 'autoencoder-pvc', '-n', 'kubeflow'], check=True)
             print("PVC 'autoencoder-pvc' deleted successfully.")
         else:
             print("PVC 'autoencoder-pvc' does not exist, no need to delete.")
@@ -74,7 +78,7 @@ def delete_pvc_if_exist():
 )
 def ml_pipeline():
 
-    delete_pvc_if_exist()
+    check_pvc_task = delete_pvc_if_exist().set_caching_options(False)
 
     pvc1 = kubernetes.CreatePVC(
         pvc_name='autoencoder-pvc',
@@ -116,6 +120,7 @@ def ml_pipeline():
         mount_path='/app/artifacts',
     )
 
+    download_task.after(check_pvc_task)
     training_task.after(download_task)
     evaluation_task.after(training_task)
     deployment_task.after(evaluation_task)
