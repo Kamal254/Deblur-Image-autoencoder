@@ -12,7 +12,7 @@ from mlflow.models import infer_signature
 import json
 
 import numpy as np
-import cv2
+# import cv2
 import requests
 import gdown
 

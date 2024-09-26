@@ -3,7 +3,7 @@ from autoencoder.entity.entity_config import PrepareInputOutputData, ModelParame
 
 import numpy as np
 import os
-import cv2
+
 import warnings;
 warnings.filterwarnings('ignore')
 

@@ -5,7 +5,7 @@ from autoencoder.entity.entity_config import TrainingModelConfig
 import numpy as np
 import json
 import os
-import cv2
+# import cv2
 import warnings;
 warnings.filterwarnings('ignore')
 
