@@ -36,34 +36,38 @@ class DataIngestionPreparation:
             api_token = self.download_config.gdrive_api_key
             api_url = f"https://www.googleapis.com/drive/v3/files?q='{folder_id}'+in+parents&key={api_token}"
             response = requests.get(api_url)
-            logger.info(f'response : {response.status_code}')
+            logger.info(f'response from the API_URL: {response.status_code}')
             if response.status_code == 200:
                 files = response.json().get('files', [])
                 # Use ThreadPoolExecutor to download files in parallel
+                logger.info("Downloading the Images Using ThreadPoolExecutor")
                 with ThreadPoolExecutor(max_workers=32) as executor:
                     executor.map(lambda file: self.download_file(file, self.download_config.download_image_folder), files)
             else:
-                print("Failed to retrieve folder content.")
-                print(f"Error: {response.status_code}, {response.text}")
+                logger.info("Failed to retrieve folder content.")
+                logger.info(f"Error: {response.status_code}, {response.text}")
         except Exception as e:
+            logger.info("Error While Downloading the Data from Google Drive")
             raise e
 
 
     def preprocess_data(self) ->str:
         try:
+            logger.info("Preprocessing the Images")
             source_folder = self.preprocess_config.download_image_folder
             destination_folder = self.preprocess_config.processed_image_folder
             image_paths = [f for f in os.listdir(source_folder) if os.path.isfile(os.path.join(source_folder, f))]
-            logger.info('Resizing the Images to (128, 128)')
             image_size = (128, 128)
+            logger.info(f'Resizing the Images to {image_size}')
             for image in image_paths:
                 src = os.path.join(source_folder, image)
                 dst = os.path.join(destination_folder, image)
                 with Image.open(src) as img:
                     img = img.resize(image_size)
                     img.save(dst)
-            logger.info(f'All Images are resized to (128, 128) and saved in {destination_folder}')
+            logger.info(f'All Images are resized to {image_size} and saved in {destination_folder}')
         except Exception as e:
+            logger.info('There is an issue in resizing the Images')
             raise e
         
 
@@ -72,7 +76,7 @@ class DataIngestionPreparation:
             source_folder = self.blurimage_config.processed_image_folder
             destination_folder = self.blurimage_config.blur_image_folder
             logger.info("Generating Blur Images for Model Input")
-            logger.info('Kernal Size (7, 7)')
+            logger.info('Using Pillow Module and Generating GaussianBlur Images')
             
             # Pillow does not use kernel size explicitly, but the BLUR filter achieves a similar effect.
             for img_name in os.listdir(source_folder):

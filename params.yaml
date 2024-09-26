@@ -1,9 +1,9 @@
 input_shape : [128, 128, 3]
-batch_size : 32
+batch_size : 8
 kernel_size : 3
 latent_dim : 256
 layer_filters : [64, 128, 256]
 loss : 'mse'
 optimizer : 'adam'
 metrics : ["acc"]
-epochs : 10
+epochs : 5

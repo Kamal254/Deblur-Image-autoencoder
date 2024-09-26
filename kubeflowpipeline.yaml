@@ -113,7 +113,7 @@ deploymentSpec:
           \ *\n\ndef download_data():\n    from autoencoder.pipeline_components.stage_01_download_and_clean_data\
           \ import DataDownloadPreprocessPipeline\n    downloader = DataDownloadPreprocessPipeline()\n\
           \    downloader.main()\n\n"
-        image: kamalxs/deblur-image-autoencoder:v1
+        image: kamalxs/deblur-image-autoencoder:v2
     exec-model-deployment:
       container:
         args:
@@ -143,7 +143,7 @@ deploymentSpec:
           \ *\n\ndef model_deployment():\n    from autoencoder.pipeline_components.Stage_04_compare_and_deploy_model\
           \ import CompareAndDownloadModel\n    deployer = CompareAndDownloadModel()\n\
           \    deployer.main()\n\n"
-        image: kamalxs/deblur-image-autoencoder:v1
+        image: kamalxs/deblur-image-autoencoder:v2
     exec-model-evaluation:
       container:
         args:
@@ -176,7 +176,7 @@ deploymentSpec:
           \ = mlflow_tracking_uri\n    os.environ['MLFLOW_TRACKING_USERNAME'] = mlflow_tracking_username\n\
           \    os.environ['MLFLOW_TRACKING_PASSWORD'] = mlflow_tracking_password\n\
           \n    evaluator = EvaluationModel()\n    evaluator.main()\n\n"
-        image: kamalxs/deblur-image-autoencoder:v1
+        image: kamalxs/deblur-image-autoencoder:v2
     exec-model-training:
       container:
         args:
@@ -206,7 +206,7 @@ deploymentSpec:
           \ *\n\ndef model_training():\n    from autoencoder.pipeline_components.Stage_02_model_training\
           \ import ModelTraining\n    trainer = ModelTraining()\n    trainer.main()\n\
           \n"
-        image: kamalxs/deblur-image-autoencoder:v1
+        image: kamalxs/deblur-image-autoencoder:v2
 pipelineInfo:
   description: Kubeflow Pipeline for autoencoder task
   name: autoencoder-pipeline

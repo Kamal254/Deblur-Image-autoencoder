@@ -7,7 +7,7 @@ import subprocess
 
 
 @dsl.component(
-    base_image="kamalxs/deblur-image-autoencoder:v1"
+    base_image="kamalxs/deblur-image-autoencoder:v2"
 )
 def download_data():
     from autoencoder.pipeline_components.stage_01_download_and_clean_data import DataDownloadPreprocessPipeline
@@ -15,7 +15,7 @@ def download_data():
     downloader.main()
 
 @dsl.component(
-    base_image="kamalxs/deblur-image-autoencoder:v1"
+    base_image="kamalxs/deblur-image-autoencoder:v2"
 )
 def model_training():
     from autoencoder.pipeline_components.Stage_02_model_training import ModelTraining
@@ -23,7 +23,7 @@ def model_training():
     trainer.main()
 
 @dsl.component(
-    base_image="kamalxs/deblur-image-autoencoder:v1"
+    base_image="kamalxs/deblur-image-autoencoder:v2"
 )
 def model_evaluation(mlflow_tracking_uri: str, mlflow_tracking_username: str, mlflow_tracking_password: str):
     from autoencoder.pipeline_components.stage_03_model_evaluation import EvaluationModel
@@ -37,7 +37,7 @@ def model_evaluation(mlflow_tracking_uri: str, mlflow_tracking_username: str, ml
     evaluator.main()
 
 @dsl.component(
-    base_image="kamalxs/deblur-image-autoencoder:v1"
+    base_image="kamalxs/deblur-image-autoencoder:v2"
 )
 
 def model_deployment():

@@ -1,0 +1,154 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.left-panel, .right-panel {
+    width: 45%;
+}
+
+#blurred-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#blurred-images img {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    transition: border-color 0.3s;
+}
+
+#blurred-images img:hover {
+    border-color: #333;
+}
+
+#drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f9f9f9;
+    position: relative;
+    transition: background-color 0.3s;
+}
+
+#drop-area p {
+    margin: 0;
+    color: #666;
+}
+
+#drop-area input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#drop-area:hover {
+    background-color: #e9e9e9;
+}
+
+#input-image-container img {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+#output-image-container {
+    margin-top: 20px;
+}
+
+#output-image-container img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+
+.image-input-box {
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto;
+    padding: 10px;
+    border: 2px dashed #4CAF50;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.image-input-box:hover {
+    background-color: #e0f7fa;
+    border-color: #009688;
+}
+
+.image-input-box input[type="file"] {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    cursor: pointer;
+}
+
+.image-input-box::before {
+    content: "Drag & drop an image or click to upload";
+    color: #4CAF50;
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.image-input-box:active {
+    background-color: #c8e6c9;
+    border-color: #388E3C;
+}

@@ -36,6 +36,7 @@ class ModelEvaluation:
 
             # api_token = self.download_config.gdrive_api_key
             api_url = f"https://www.googleapis.com/drive/v3/files?q='{folder_id}'+in+parents&key=AIzaSyD9C-ouf5DmOrKzH5p4DsLcZ6k8FB-o13I"
+            logger.info(f"Download the Test data for Model Testing from : {api_url}")
             logger.info(f"Getting Response from Gdrive api_url : {api_url}")
             response = requests.get(api_url)
             logger.info(f'response : {response.status_code}')
@@ -71,6 +72,7 @@ class ModelEvaluation:
             raise e
     
     def psnr_metric(self, y_true, y_pred):
+        logger.info("Calculating the PSNR Metric")
         return tf.image.psnr(y_true, y_pred, max_val=1.0)
     
 
@@ -151,6 +153,7 @@ class ModelEvaluation:
             psnr_values = [self.psnr_metric(y_true, y_pred).numpy() for y_true, y_pred in zip(y_test, y_pred)]
             avg_psnr = np.mean(psnr_values)
             mlflow.log_metric(' peak signal-to-noise ratio ', avg_psnr)
+            logger.info("Logging Model into mlflow")
             if tracking_url_type_store != "file":
                 mlflow.keras.log_model(model, "model", registered_model_name="autoencoder")
             else:

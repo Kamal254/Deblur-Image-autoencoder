@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deblur Image</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script>
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.id);
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const imageId = event.dataTransfer.getData("text");
+            const imageElement = document.getElementById(imageId);
+            document.getElementById('input-image').src = imageElement.src;
+            document.getElementById('input-image-container').style.display = 'block';
+
+
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('input-image').src = e.target.result;
+                    document.getElementById('input-image-container').style.display = 'block';
+
+
+
+
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function predictImage() {
+        const inputImage = document.getElementById('input-image');
+        const formData = new FormData();
+
+        if (inputImage.src && !inputImage.src.startsWith('data:')) {
+            // Handle image dragged from left panel
+            const response = await fetch(inputImage.src);
+            const blob = await response.blob();
+            formData.append('file', blob, 'dropped-image.png');
+        } else if (inputImage.src.startsWith('data:')) {
+            // Handle image selected from local file
+            const blob = await (await fetch(inputImage.src)).blob();
+            formData.append('file', blob, 'selected-image.png');
+        } else {
+            alert('Please drag and drop an image or select one from your device.');
+            return;
+        }
+
+        const response = await fetch('/predict', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+            document.getElementById('output-image').src = imageUrl;
+            document.getElementById('output-image-container').style.display = 'block';
+
+        } else {
+            alert('Error: Could not deblur the image.');
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Deblur Image</h1>
+        <div class="content" >
+            <div class="left-panel">
+                <h2>Choose a Blurred Image</h2>
+                <div id="blurred-images">
+                        <img id="image1" src="../artifacts/dataset/testingfolder/test_blur_images/SFHQ_pt2_00009960.jpg" alt="Blurred Image 1" draggable="true" ondragstart="drag(event)">
+                        <img id="image2" src="../artifacts/dataset/testingfolder/test_blur_images/SFHQ_pt2_00009961.jpg" alt="Blurred Image 2" draggable="true" ondragstart="drag(event)">
+                        <img id="image3" src="../artifacts/dataset/testingfolder/test_blur_images/SFHQ_pt2_00009962.jpg" alt="Blurred Image 3" draggable="true" ondragstart="drag(event)">
+                        <img id="image4" src="../artifacts/dataset/testingfolder/test_blur_images/SFHQ_pt2_00009963.jpg" alt="Blurred Image 4" draggable="true" ondragstart="drag(event)">
+                </div>
+            </div>
+            <div class="right-panel" style="display: flex;">
+                <diiv>
+                    <h2>Input Image</h2>
+                    <div id="drop-area" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        <p>Drag and drop an image here or select one from your device</p>
+                        <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+                        <div id="input-image-container" style="display:none;">
+                            <img id="input-image" src="" alt="Input Image">
+                        </div>
+                    </div>
+                    <button type="button" onclick="predictImage()">Generate</button>
+                </diiv>
+
+                <div id="output-image-container" style="display:none;">
+                    <h2>Deblurred Image:</h2>
+                    <img id="output-image" src="" alt="Deblurred Image">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.left-panel, .right-panel {
+    width: 100%;
+}
+
+#blurred-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#blurred-images img {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    transition: border-color 0.3s;
+}
+
+#blurred-images img:hover {
+    border-color: #333;
+}
+
+#drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f9f9f9;
+    position: relative;
+    transition: background-color 0.3s;
+}
+
+#drop-area p {
+    margin: 0;
+    color: #666;
+}
+
+#drop-area input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#drop-area:hover {
+    background-color: #e9e9e9;
+}
+
+#input-image-container img {
+    width: 50%;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+
+
+#output-image-container h2 {
+    padding-left: 20px;
+}
+
+#output-image-container img {
+    padding-left: 20px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+</style>
