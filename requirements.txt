@@ -1,7 +1,10 @@
+libgl1-mesa-glx
+libglib2.0-0
+ffmpeg
 pathlib
-logging
 mlflow
 cv2-tools
+opencv-python
 scikit-image
 urllib3
 dataclasses
@@ -11,9 +14,8 @@ pyYAML
 tqdm
 ensure
 joblib
-json
+# json
 types-PyYAML
-scipy
 pandas== 2.2.2
 numpy==1.26.4
 fastapi==0.112.1

@@ -2,18 +2,22 @@ import kfp
 from kfp import dsl
 from kfp import kubernetes
 from kfp import compiler
+import subprocess
+
 
 
 @dsl.component(
-    base_image="Docker/Image"
+    base_image="kamalxs/deblur-image-autoencoder:v1"
 )
 def download_data():
+    import subprocess
+    subprocess.run(["pip", "install", "opencv-python"], check=True)
     from autoencoder.pipeline_components.stage_01_download_and_clean_data import DataDownloadPreprocessPipeline
     downloader = DataDownloadPreprocessPipeline()
     downloader.main()
 
 @dsl.component(
-    base_image="Docker/Image"
+    base_image="kamalxs/deblur-image-autoencoder:v1"
 )
 def model_training():
     from autoencoder.pipeline_components.Stage_02_model_training import ModelTraining
@@ -21,25 +25,7 @@ def model_training():
     trainer.main()
 
 @dsl.component(
-    base_image="Docker/Image"
-)
-def model_evaluation():
-    from autoencoder.pipeline_components.stage_03_model_evaluation import EvaluationModel
-    evaluator = EvaluationModel()
-    evaluator.main()
-
-
-@dsl.component(
-    base_image="Docker/Image"
-)
-def model_evaluation():
-    from autoencoder.pipeline_components.stage_03_model_evaluation import EvaluationModel
-    evaluator = EvaluationModel()
-    evaluator.main()
-
-
-@dsl.component(
-    base_image="Docker/Image"
+    base_image="kamalxs/deblur-image-autoencoder:v1"
 )
 def model_evaluation(mlflow_tracking_uri: str, mlflow_tracking_username: str, mlflow_tracking_password: str):
     from autoencoder.pipeline_components.stage_03_model_evaluation import EvaluationModel
@@ -53,7 +39,7 @@ def model_evaluation(mlflow_tracking_uri: str, mlflow_tracking_username: str, ml
     evaluator.main()
 
 @dsl.component(
-    base_image="Docker/Image"
+    base_image="kamalxs/deblur-image-autoencoder:v1"
 )
 
 def model_deployment():
@@ -62,31 +48,54 @@ def model_deployment():
     deployer.main()
 
 
-@dsl.pipeline(
-    name="Deblur Image Autoencoder Pipeline",
-    description="End to End pipeline for building Autoencoder to Deblur Image"
-)
+def delete_pvc_if_exist():
+    import subprocess
+    
+    try:
+        result = subprocess.run(['kubectl', 'get', 'pvc', 'autoencoder-pvc'], 
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        
+        if result.returncode == 0:
+            print("PVC 'autoencoder-pvc' already exists.")
+            print("Deleting the existing PVC...")
+            subprocess.run(['kubectl', 'delete', 'pvc', 'autoencoder-pvc'], check=True)
+            print("PVC 'autoencoder-pvc' deleted successfully.")
+        else:
+            print("PVC 'autoencoder-pvc' does not exist, no need to delete.")
 
-def kfppipeline():
-    pvc = kubernetes.CreatePVC(
-        pvc_name='my_pvc',
+    except subprocess.CalledProcessError as e:
+        print(f"Error while checking or deleting PVC: {str(e)}")
+
+
+
+@dsl.pipeline(
+    name="autoencoder Pipeline",
+    description="Kubeflow Pipeline for autoencoder task"
+)
+def ml_pipeline():
+
+    delete_pvc_if_exist()
+
+    pvc1 = kubernetes.CreatePVC(
+        pvc_name='autoencoder-pvc',
         access_modes=['ReadWriteMany'],
         size='5Gi',
-        storage_class_name = 'standard'
+        storage_class_name='standard'
     )
+
 
     download_task = download_data().set_caching_options(False)
     kubernetes.mount_pvc(
         download_task,
-        pvc_name=pvc.outputs['name'],
-        mount_path='/app/artifacts'
+        pvc_name=pvc1.outputs['name'],
+        mount_path='/app/artifacts',
     )
 
     training_task = model_training().set_caching_options(False)
     kubernetes.mount_pvc(
         training_task,
-        pvc_name=pvc.outputs['name'],
-        mount_path='/app/artifacts'
+        pvc_name=pvc1.outputs['name'],
+        mount_path='/app/artifacts',
     )
 
     evaluation_task = model_evaluation(
@@ -96,17 +105,16 @@ def kfppipeline():
     ).set_caching_options(False)
     kubernetes.mount_pvc(
         evaluation_task,
-        pvc_name=pvc.outputs['name'],
-        mount_path='/app/artifacts'
+        pvc_name=pvc1.outputs['name'],
+        mount_path='/app/artifacts',
     )
 
     deployment_task = model_deployment().set_caching_options(False)
     kubernetes.mount_pvc(
         deployment_task,
-        pvc_name=pvc.outputs['name'],
-        mount_path='/app/artifacts'
+        pvc_name=pvc1.outputs['name'],
+        mount_path='/app/artifacts',
     )
-
 
     training_task.after(download_task)
     evaluation_task.after(training_task)
@@ -114,4 +122,4 @@ def kfppipeline():
 
 
 if __name__ == '__main__':
-    compiler.Compiler().compile(kfppipeline, 'kubeflowpipeline.yaml')
+    compiler.Compiler().compile(ml_pipeline, 'kubeflowpipeline.yaml')
