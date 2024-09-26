@@ -5,11 +5,11 @@ from autoencoder.entity.entity_config import DownloadDataConfig, PreprocessDataC
 import requests
 import gdown
 import os
-import cv2
+# import cv2
 from keras.preprocessing import image
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor
-
+from PIL import Image, ImageFilter
 
 
 class DataIngestionPreparation:
@@ -66,19 +66,40 @@ class DataIngestionPreparation:
         except Exception as e:
             raise e
         
-    def generate_blur_images(self) ->str:
+
+    def generate_blur_images(self) -> str:
         try:
             source_folder = self.blurimage_config.processed_image_folder
             destination_folder = self.blurimage_config.blur_image_folder
             logger.info("Generating Blur Images for Model Input")
             logger.info('Kernal Size (7, 7)')
-            kernal_size = (7,7)
+            
+            # Pillow does not use kernel size explicitly, but the BLUR filter achieves a similar effect.
             for img_name in os.listdir(source_folder):
                 img_path = os.path.join(source_folder, img_name)
-                img = cv2.imread(img_path)
+                img = Image.open(img_path)
                 if img is not None:
-                    blurred_img = cv2.GaussianBlur(img, kernal_size, 0)
-                    cv2.imwrite(os.path.join(destination_folder, img_name), blurred_img)
+                    # Apply Gaussian blur using ImageFilter.GaussianBlur
+                    blurred_img = img.filter(ImageFilter.GaussianBlur(radius=3.5))  # Adjust the radius to approximate kernel size
+                    blurred_img.save(os.path.join(destination_folder, img_name))
+            
             logger.info(f'Generated Blur Images and saved in {destination_folder}')
         except Exception as e:
             raise e
+        
+    # def generate_blur_images(self) ->str:
+    #     try:
+    #         source_folder = self.blurimage_config.processed_image_folder
+    #         destination_folder = self.blurimage_config.blur_image_folder
+    #         logger.info("Generating Blur Images for Model Input")
+    #         logger.info('Kernal Size (7, 7)')
+    #         kernal_size = (7,7)
+    #         for img_name in os.listdir(source_folder):
+    #             img_path = os.path.join(source_folder, img_name)
+    #             img = cv2.imread(img_path)
+    #             if img is not None:
+    #                 blurred_img = cv2.GaussianBlur(img, kernal_size, 0)
+    #                 cv2.imwrite(os.path.join(destination_folder, img_name), blurred_img)
+    #         logger.info(f'Generated Blur Images and saved in {destination_folder}')
+    #     except Exception as e:
+    #         raise e

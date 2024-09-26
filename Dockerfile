@@ -24,11 +24,11 @@ COPY . /app
 RUN pip install --upgrade pip && \
     pip install -r /app/requirements.txt
 
-# Install necessary system packages for opencv-python
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+# # Install necessary system packages for opencv-python
+# RUN apt-get update && apt-get install -y \
+#     libgl1-mesa-glx \
+#     libglib2.0-0 \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Application code
 FROM base AS final

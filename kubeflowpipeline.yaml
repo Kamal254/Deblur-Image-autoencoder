@@ -1,0 +1,314 @@
+# PIPELINE DEFINITION
+# Name: autoencoder-pipeline
+# Description: Kubeflow Pipeline for autoencoder task
+components:
+  comp-createpvc:
+    executorLabel: exec-createpvc
+    inputDefinitions:
+      parameters:
+        access_modes:
+          description: 'AccessModes to request for the provisioned PVC. May
+
+            be one or more of ``''ReadWriteOnce''``, ``''ReadOnlyMany''``, ``''ReadWriteMany''``,
+            or
+
+            ``''ReadWriteOncePod''``. Corresponds to `PersistentVolumeClaim.spec.accessModes
+            <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes>`_.'
+          parameterType: LIST
+        annotations:
+          description: Annotations for the PVC's metadata. Corresponds to `PersistentVolumeClaim.metadata.annotations
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaim>`_.
+          isOptional: true
+          parameterType: STRUCT
+        pvc_name:
+          description: 'Name of the PVC. Corresponds to `PersistentVolumeClaim.metadata.name
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaim>`_.
+            Only one of ``pvc_name`` and ``pvc_name_suffix`` can
+
+            be provided.'
+          isOptional: true
+          parameterType: STRING
+        pvc_name_suffix:
+          description: 'Prefix to use for a dynamically generated name, which
+
+            will take the form ``<argo-workflow-name>-<pvc_name_suffix>``. Only one
+
+            of ``pvc_name`` and ``pvc_name_suffix`` can be provided.'
+          isOptional: true
+          parameterType: STRING
+        size:
+          description: The size of storage requested by the PVC that will be provisioned.
+            For example, ``'5Gi'``. Corresponds to `PersistentVolumeClaim.spec.resources.requests.storage
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec>`_.
+          parameterType: STRING
+        storage_class_name:
+          defaultValue: ''
+          description: 'Name of StorageClass from which to provision the PV
+
+            to back the PVC. ``None`` indicates to use the cluster''s default
+
+            storage_class_name. Set to ``''''`` for a statically specified PVC.'
+          isOptional: true
+          parameterType: STRING
+        volume_name:
+          description: 'Pre-existing PersistentVolume that should back the
+
+            provisioned PersistentVolumeClaim. Used for statically
+
+            specified PV only. Corresponds to `PersistentVolumeClaim.spec.volumeName
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec>`_.'
+          isOptional: true
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        name:
+          parameterType: STRING
+  comp-download-data:
+    executorLabel: exec-download-data
+  comp-model-deployment:
+    executorLabel: exec-model-deployment
+  comp-model-evaluation:
+    executorLabel: exec-model-evaluation
+    inputDefinitions:
+      parameters:
+        mlflow_tracking_password:
+          parameterType: STRING
+        mlflow_tracking_uri:
+          parameterType: STRING
+        mlflow_tracking_username:
+          parameterType: STRING
+  comp-model-training:
+    executorLabel: exec-model-training
+deploymentSpec:
+  executors:
+    exec-createpvc:
+      container:
+        image: argostub/createpvc
+    exec-download-data:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - download_data
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef download_data():\n    from autoencoder.pipeline_components.stage_01_download_and_clean_data\
+          \ import DataDownloadPreprocessPipeline\n    downloader = DataDownloadPreprocessPipeline()\n\
+          \    downloader.main()\n\n"
+        image: kamalxs/deblur-image-autoencoder:v1
+    exec-model-deployment:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - model_deployment
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef model_deployment():\n    from autoencoder.pipeline_components.Stage_04_compare_and_deploy_model\
+          \ import CompareAndDownloadModel\n    deployer = CompareAndDownloadModel()\n\
+          \    deployer.main()\n\n"
+        image: kamalxs/deblur-image-autoencoder:v1
+    exec-model-evaluation:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - model_evaluation
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef model_evaluation(mlflow_tracking_uri: str, mlflow_tracking_username:\
+          \ str, mlflow_tracking_password: str):\n    from autoencoder.pipeline_components.stage_03_model_evaluation\
+          \ import EvaluationModel\n    import os\n\n    os.environ['MLFLOW_TRACKING_URI']\
+          \ = mlflow_tracking_uri\n    os.environ['MLFLOW_TRACKING_USERNAME'] = mlflow_tracking_username\n\
+          \    os.environ['MLFLOW_TRACKING_PASSWORD'] = mlflow_tracking_password\n\
+          \n    evaluator = EvaluationModel()\n    evaluator.main()\n\n"
+        image: kamalxs/deblur-image-autoencoder:v1
+    exec-model-training:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - model_training
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef model_training():\n    from autoencoder.pipeline_components.Stage_02_model_training\
+          \ import ModelTraining\n    trainer = ModelTraining()\n    trainer.main()\n\
+          \n"
+        image: kamalxs/deblur-image-autoencoder:v1
+pipelineInfo:
+  description: Kubeflow Pipeline for autoencoder task
+  name: autoencoder-pipeline
+root:
+  dag:
+    tasks:
+      createpvc:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-createpvc
+        inputs:
+          parameters:
+            access_modes:
+              runtimeValue:
+                constant:
+                - ReadWriteMany
+            pvc_name:
+              runtimeValue:
+                constant: autoencoder-pvc
+            size:
+              runtimeValue:
+                constant: 5Gi
+            storage_class_name:
+              runtimeValue:
+                constant: standard
+        taskInfo:
+          name: createpvc
+      download-data:
+        cachingOptions: {}
+        componentRef:
+          name: comp-download-data
+        dependentTasks:
+        - createpvc
+        taskInfo:
+          name: download-data
+      model-deployment:
+        cachingOptions: {}
+        componentRef:
+          name: comp-model-deployment
+        dependentTasks:
+        - createpvc
+        - model-evaluation
+        taskInfo:
+          name: model-deployment
+      model-evaluation:
+        cachingOptions: {}
+        componentRef:
+          name: comp-model-evaluation
+        dependentTasks:
+        - createpvc
+        - model-training
+        inputs:
+          parameters:
+            mlflow_tracking_password:
+              runtimeValue:
+                constant: 3cbdb442b5873e54a9130d1e83862bb2e7993f55
+            mlflow_tracking_uri:
+              runtimeValue:
+                constant: https://dagshub.com/Kamal254/Deblur-Image-autoencoder.mlflow
+            mlflow_tracking_username:
+              runtimeValue:
+                constant: Kamal254
+        taskInfo:
+          name: model-evaluation
+      model-training:
+        cachingOptions: {}
+        componentRef:
+          name: comp-model-training
+        dependentTasks:
+        - createpvc
+        - download-data
+        taskInfo:
+          name: model-training
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.9.0
+---
+platforms:
+  kubernetes:
+    deploymentSpec:
+      executors:
+        exec-download-data:
+          pvcMount:
+          - mountPath: /app/artifacts
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+        exec-model-deployment:
+          pvcMount:
+          - mountPath: /app/artifacts
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+        exec-model-evaluation:
+          pvcMount:
+          - mountPath: /app/artifacts
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+        exec-model-training:
+          pvcMount:
+          - mountPath: /app/artifacts
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc

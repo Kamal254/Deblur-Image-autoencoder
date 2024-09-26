@@ -1,7 +1,7 @@
 pathlib
 mlflow
-cv2-tools
-opencv-python
+# cv2-tools
+# opencv-python
 scikit-image
 urllib3
 dataclasses
